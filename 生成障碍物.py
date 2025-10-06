@@ -10,8 +10,8 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
-MAP_W, MAP_H = 128, 64
-CELL = 10  # 格子像素
+MAP_W, MAP_H = 32, 32
+CELL = 15  # 格子像素
 ORIGIN_X = 20  # 坐标轴留白
 ORIGIN_Y = 20
 BAR_COLOR = "#FF3B30"
@@ -139,13 +139,13 @@ class MapEditor(tk.Tk):
             return
         file_path = filedialog.asksaveasfilename(
             defaultextension=".c",
-            filetypes=[("C files", "*.c"), ("All files", "*.*")],
-            initialfile="map_barrier.c",
+            filetypes=[("C++ files", "*.cpp"), ("All files", "*.*")],
+            initialfile="map_barrier.cpp",
         )
         if not file_path:
             return
 
-        lines = ["void build_complex_map(void)", "{", "    astar_init();"]
+        lines = ["#include <astar.h>\n#include<map_barrier.h>\n void build_complex_map(void)", "{"]
         coords = sorted(self.barriers)
         for i in range(0, len(coords), 8):
             chunk = coords[i : i + 8]

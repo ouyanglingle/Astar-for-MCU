@@ -1,8 +1,8 @@
 /**
  * @file astar.h
- * @brief 更适合单片机体质的C语言 A* 寻路实现，使用宽128高64的地图，避免浮点运算
+ * @brief 更适合单片机体质的C语言 A* 寻路实现，使用宽32高32的地图，避免浮点运算
  * @author AUST-WMZ
- * @version 1.0
+ * @version 1.1
  * @date 2025.10.06
  */
 

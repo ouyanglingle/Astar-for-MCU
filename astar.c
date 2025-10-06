@@ -8,6 +8,7 @@
 
 #include "astar.h"
 #include <string.h>
+#include <stdio.h>
 
 // ------------------ 位带 -------------------
 
@@ -72,13 +73,13 @@ void astar_set_barrier(uint16_t x, uint16_t y, uint8_t on)
 // ------------------ 节点 -------------------
 typedef struct
 {
-    uint16_t x : 7, y : 6;   // 128=7bit 64=6bit
-    uint16_t g : 12;         // g 最大 4095，单位“代价”
-    uint16_t parent_idx : 9; // 父节点索引，不使用 struct Node *parent了
-    uint16_t in_open : 1;    // 标记是否在开放列表
-} Node;                      // 你想爆栈么？
-static Node pool[MAX_OPEN];  // 静态节点内存池，用于存储所有开放列表中的节点
-static uint16_t pool_cnt;    // 节点内存池使用计数器，记录已分配的节点数量
+    uint16_t x : 8, y : 8;    // 128=7bit 64=6bit
+    uint16_t g : 12;          // g 最大 4095，单位“代价”
+    uint16_t parent_idx : 12; // 父节点索引，不使用 struct Node *parent了
+    uint16_t in_open : 1;     // 标记是否在开放列表
+} Node;                       // 你想爆栈么？
+static Node pool[MAX_OPEN];   // 静态节点内存池，用于存储所有开放列表中的节点
+static uint16_t pool_cnt;     // 节点内存池使用计数器，记录已分配的节点数量
 
 // 从节点内存池中分配一个节点，返回分配的节点在内存池中的索引
 static inline uint16_t pool_alloc(void)
@@ -213,7 +214,7 @@ int astar_search(Point from, Point to, Point *out_path)
     pool[start].x = from.x;
     pool[start].y = from.y;
     pool[start].g = 0;
-    pool[start].parent_idx = 0x1FF; // 无效值。超过511
+    pool[start].parent_idx = 0xFFF; // 无效值
     pool[start].in_open = 1;
     heap_push(start);
 
@@ -228,22 +229,19 @@ int astar_search(Point from, Point to, Point *out_path)
         // 判断是否到达终点
         if (cn->x == to.x && cn->y == to.y)
         {
-            // 回溯路径
+            // 回溯代码
             int len = 0;
             uint16_t idx = cur;
             static Point rev[MAX_PATH];
-            while (idx != 0x1FF && len < MAX_PATH)
+            while (idx != 0xFFF && len < MAX_PATH)
             {
                 rev[len].x = pool[idx].x;
                 rev[len].y = pool[idx].y;
                 idx = pool[idx].parent_idx;
                 len++;
             }
-            // 将路径反转后存储到输出数组中
             for (int i = 0; i < len; i++)
-            {
                 out_path[i] = rev[len - 1 - i];
-            }
             return len;
         }
 
@@ -283,7 +281,9 @@ int astar_search(Point from, Point to, Point *out_path)
             {
                 // 新节点
                 if (pool_cnt >= MAX_OPEN)
-                    continue; // 池满
+                {
+                    continue;
+                }
                 uint16_t nd = pool_alloc();
                 pool[nd].x = nx;
                 pool[nd].y = ny;
@@ -294,6 +294,7 @@ int astar_search(Point from, Point to, Point *out_path)
             }
         }
     }
+    printf("DEBUG: open list empty, total pool used %d\n", pool_cnt);
     return 0; // 无解
 }
 

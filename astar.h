@@ -12,8 +12,8 @@
 
 #define MAP_W 128
 #define MAP_H 64
-#define MAX_OPEN 512 // 同时打开的最大节点数
-#define MAX_PATH 256 // 返回路径最大长度
+#define MAX_OPEN 2048 // 同时打开的最大节点数
+#define MAX_PATH 512 // 返回路径最大长度
 
 typedef struct
 {

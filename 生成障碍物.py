@@ -137,30 +137,41 @@ class MapEditor(tk.Tk):
         if not self.barriers:
             messagebox.showwarning("Empty", "没有障碍物可导出！")
             return
+
         file_path = filedialog.asksaveasfilename(
-            defaultextension=".c",
+            defaultextension=".cpp",
             filetypes=[("C++ files", "*.cpp"), ("All files", "*.*")],
             initialfile="map_barrier.cpp",
         )
         if not file_path:
             return
 
-        lines = ["#include <astar.h>\n#include<map_barrier.h>\n void build_complex_map(void)", "{"]
         coords = sorted(self.barriers)
-        for i in range(0, len(coords), 8):
-            chunk = coords[i : i + 8]
-            line = "    " + " ".join(
-                f"astar_set_barrier({x},{y},1);" for x, y in chunk
-            )
-            lines.append(line)
-        lines.append("}")
+        num = len(coords)
 
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
+            f.write('#include "astar.h"\n\n')
+            f.write("typedef struct { uint16_t x, y; } Point;\n\n")
+            f.write(f"static const Point BARRIERS[{num}] = {{\n")
 
-        messagebox.showinfo(
-            "OK", f"已导出 {len(coords)} 个障碍到\n{file_path}"
-        )
+            # 每行 8 个
+            for i in range(0, num, 8):
+                chunk = coords[i:i+8]
+                line = "    " + ", ".join(f"{{ {x}, {y} }}" for x, y in chunk)
+                if i + 8 < num:
+                    line += ","
+                f.write(line + "\n")
+
+            f.write("};\n\n")
+            f.write(f"static const uint16_t BARRIER_NUM = {num};\n\n")
+
+            f.write("void build_complex_map(void)\n")
+            f.write("{\n")
+            f.write("    for (uint16_t i = 0; i < BARRIER_NUM; ++i)\n")
+            f.write("        astar_set_barrier(BARRIERS[i].x, BARRIERS[i].y, 1);\n")
+            f.write("}\n")
+
+        messagebox.showinfo("OK", f"已导出 {num} 个障碍到\n{file_path}")
 
 
 if __name__ == "__main__":

@@ -1,71 +1,77 @@
 #include "astar.h"
 #include "map_barrier.h"
-void build_complex_map(void)
+
+const Point BARRIERS[481] = {
+    { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 }, { 0, 4 }, { 0, 5 }, { 0, 6 }, { 0, 7 },
+    { 0, 8 }, { 0, 9 }, { 0, 10 }, { 0, 11 }, { 0, 12 }, { 0, 13 }, { 0, 14 }, { 0, 15 },
+    { 0, 16 }, { 0, 17 }, { 0, 18 }, { 0, 19 }, { 0, 20 }, { 0, 21 }, { 0, 22 }, { 0, 23 },
+    { 0, 24 }, { 0, 25 }, { 0, 26 }, { 0, 27 }, { 0, 28 }, { 0, 29 }, { 0, 30 }, { 0, 31 },
+    { 1, 0 }, { 1, 6 }, { 1, 7 }, { 1, 12 }, { 1, 13 }, { 1, 14 }, { 1, 18 }, { 1, 19 },
+    { 1, 20 }, { 1, 22 }, { 1, 23 }, { 1, 26 }, { 1, 27 }, { 1, 31 }, { 2, 0 }, { 2, 2 },
+    { 2, 4 }, { 2, 6 }, { 2, 9 }, { 2, 25 }, { 2, 26 }, { 2, 31 }, { 3, 0 }, { 3, 2 },
+    { 3, 4 }, { 3, 5 }, { 3, 6 }, { 3, 9 }, { 3, 10 }, { 3, 13 }, { 3, 15 }, { 3, 16 },
+    { 3, 17 }, { 3, 19 }, { 3, 20 }, { 3, 21 }, { 3, 24 }, { 3, 25 }, { 3, 31 }, { 4, 0 },
+    { 4, 2 }, { 4, 10 }, { 4, 13 }, { 4, 15 }, { 4, 17 }, { 4, 19 }, { 4, 21 }, { 4, 23 },
+    { 4, 24 }, { 4, 28 }, { 4, 29 }, { 4, 30 }, { 4, 31 }, { 5, 0 }, { 5, 2 }, { 5, 3 },
+    { 5, 5 }, { 5, 6 }, { 5, 7 }, { 5, 8 }, { 5, 10 }, { 5, 13 }, { 5, 14 }, { 5, 15 },
+    { 5, 17 }, { 5, 18 }, { 5, 19 }, { 5, 21 }, { 5, 28 }, { 5, 29 }, { 5, 31 }, { 6, 0 },
+    { 6, 3 }, { 6, 6 }, { 6, 7 }, { 6, 10 }, { 6, 21 }, { 6, 26 }, { 6, 29 }, { 6, 31 },
+    { 7, 0 }, { 7, 3 }, { 7, 4 }, { 7, 10 }, { 7, 16 }, { 7, 17 }, { 7, 18 }, { 7, 19 },
+    { 7, 20 }, { 7, 21 }, { 7, 22 }, { 7, 23 }, { 7, 25 }, { 7, 26 }, { 7, 29 }, { 7, 31 },
+    { 8, 0 }, { 8, 8 }, { 8, 9 }, { 8, 10 }, { 8, 12 }, { 8, 13 }, { 8, 14 }, { 8, 16 },
+    { 8, 17 }, { 8, 18 }, { 8, 19 }, { 8, 20 }, { 8, 21 }, { 8, 22 }, { 8, 29 }, { 8, 31 },
+    { 9, 0 }, { 9, 2 }, { 9, 3 }, { 9, 4 }, { 9, 5 }, { 9, 6 }, { 9, 8 }, { 9, 14 },
+    { 9, 25 }, { 9, 29 }, { 9, 31 }, { 10, 0 }, { 10, 2 }, { 10, 6 }, { 10, 10 }, { 10, 12 },
+    { 10, 13 }, { 10, 14 }, { 10, 15 }, { 10, 16 }, { 10, 17 }, { 10, 18 }, { 10, 19 }, { 10, 20 },
+    { 10, 24 }, { 10, 25 }, { 10, 27 }, { 10, 31 }, { 11, 0 }, { 11, 2 }, { 11, 4 }, { 11, 6 },
+    { 11, 8 }, { 11, 10 }, { 11, 22 }, { 11, 24 }, { 11, 25 }, { 11, 27 }, { 11, 28 }, { 11, 29 },
+    { 11, 31 }, { 12, 0 }, { 12, 2 }, { 12, 4 }, { 12, 6 }, { 12, 7 }, { 12, 8 }, { 12, 10 },
+    { 12, 12 }, { 12, 13 }, { 12, 18 }, { 12, 19 }, { 12, 20 }, { 12, 22 }, { 12, 24 }, { 12, 25 },
+    { 12, 31 }, { 13, 0 }, { 13, 2 }, { 13, 4 }, { 13, 8 }, { 13, 10 }, { 13, 12 }, { 13, 20 },
+    { 13, 22 }, { 13, 24 }, { 13, 25 }, { 13, 27 }, { 13, 28 }, { 13, 30 }, { 13, 31 }, { 14, 0 },
+    { 14, 1 }, { 14, 2 }, { 14, 4 }, { 14, 5 }, { 14, 6 }, { 14, 8 }, { 14, 10 }, { 14, 12 },
+    { 14, 14 }, { 14, 16 }, { 14, 18 }, { 14, 22 }, { 14, 27 }, { 14, 30 }, { 14, 31 }, { 15, 0 },
+    { 15, 6 }, { 15, 8 }, { 15, 10 }, { 15, 22 }, { 15, 24 }, { 15, 25 }, { 15, 27 }, { 15, 29 },
+    { 15, 30 }, { 15, 31 }, { 16, 0 }, { 16, 2 }, { 16, 3 }, { 16, 4 }, { 16, 8 }, { 16, 10 },
+    { 16, 14 }, { 16, 18 }, { 16, 22 }, { 16, 24 }, { 16, 25 }, { 16, 31 }, { 17, 0 }, { 17, 2 },
+    { 17, 6 }, { 17, 8 }, { 17, 10 }, { 17, 22 }, { 17, 24 }, { 17, 25 }, { 17, 28 }, { 17, 30 },
+    { 17, 31 }, { 18, 0 }, { 18, 2 }, { 18, 4 }, { 18, 5 }, { 18, 6 }, { 18, 8 }, { 18, 10 },
+    { 18, 14 }, { 18, 16 }, { 18, 18 }, { 18, 20 }, { 18, 22 }, { 18, 28 }, { 18, 30 }, { 18, 31 },
+    { 19, 0 }, { 19, 2 }, { 19, 4 }, { 19, 10 }, { 19, 12 }, { 19, 20 }, { 19, 22 }, { 19, 28 },
+    { 19, 31 }, { 20, 0 }, { 20, 2 }, { 20, 4 }, { 20, 6 }, { 20, 7 }, { 20, 8 }, { 20, 10 },
+    { 20, 12 }, { 20, 13 }, { 20, 14 }, { 20, 19 }, { 20, 20 }, { 20, 22 }, { 20, 24 }, { 20, 25 },
+    { 20, 26 }, { 20, 28 }, { 20, 29 }, { 20, 31 }, { 21, 0 }, { 21, 2 }, { 21, 4 }, { 21, 6 },
+    { 21, 8 }, { 21, 10 }, { 21, 22 }, { 21, 24 }, { 21, 26 }, { 21, 28 }, { 21, 31 }, { 22, 0 },
+    { 22, 2 }, { 22, 6 }, { 22, 8 }, { 22, 12 }, { 22, 13 }, { 22, 14 }, { 22, 15 }, { 22, 16 },
+    { 22, 17 }, { 22, 18 }, { 22, 19 }, { 22, 20 }, { 22, 24 }, { 22, 26 }, { 22, 28 }, { 22, 30 },
+    { 22, 31 }, { 23, 0 }, { 23, 2 }, { 23, 3 }, { 23, 4 }, { 23, 5 }, { 23, 6 }, { 23, 8 },
+    { 23, 9 }, { 23, 10 }, { 23, 22 }, { 23, 24 }, { 23, 26 }, { 23, 28 }, { 23, 30 }, { 23, 31 },
+    { 24, 0 }, { 24, 10 }, { 24, 11 }, { 24, 12 }, { 24, 13 }, { 24, 16 }, { 24, 17 }, { 24, 18 },
+    { 24, 19 }, { 24, 20 }, { 24, 22 }, { 24, 24 }, { 24, 26 }, { 24, 28 }, { 24, 31 }, { 25, 0 },
+    { 25, 2 }, { 25, 3 }, { 25, 4 }, { 25, 5 }, { 25, 6 }, { 25, 7 }, { 25, 8 }, { 25, 19 },
+    { 25, 24 }, { 25, 26 }, { 25, 28 }, { 25, 30 }, { 25, 31 }, { 26, 0 }, { 26, 8 }, { 26, 9 },
+    { 26, 10 }, { 26, 11 }, { 26, 12 }, { 26, 14 }, { 26, 15 }, { 26, 16 }, { 26, 17 }, { 26, 19 },
+    { 26, 20 }, { 26, 21 }, { 26, 22 }, { 26, 23 }, { 26, 24 }, { 26, 30 }, { 26, 31 }, { 27, 0 },
+    { 27, 2 }, { 27, 3 }, { 27, 11 }, { 27, 14 }, { 27, 15 }, { 27, 16 }, { 27, 23 }, { 27, 26 },
+    { 27, 27 }, { 27, 28 }, { 27, 29 }, { 27, 30 }, { 27, 31 }, { 28, 0 }, { 28, 10 }, { 28, 11 },
+    { 28, 16 }, { 28, 17 }, { 28, 18 }, { 28, 19 }, { 28, 20 }, { 28, 23 }, { 28, 31 }, { 29, 0 },
+    { 29, 4 }, { 29, 5 }, { 29, 6 }, { 29, 8 }, { 29, 9 }, { 29, 10 }, { 29, 13 }, { 29, 14 },
+    { 29, 20 }, { 29, 21 }, { 29, 23 }, { 29, 25 }, { 29, 28 }, { 29, 29 }, { 29, 31 }, { 30, 0 },
+    { 30, 4 }, { 30, 12 }, { 30, 13 }, { 30, 14 }, { 30, 15 }, { 30, 21 }, { 30, 25 }, { 30, 28 },
+    { 30, 31 }, { 31, 0 }, { 31, 1 }, { 31, 2 }, { 31, 3 }, { 31, 4 }, { 31, 5 }, { 31, 6 },
+    { 31, 7 }, { 31, 8 }, { 31, 9 }, { 31, 10 }, { 31, 11 }, { 31, 12 }, { 31, 13 }, { 31, 14 },
+    { 31, 15 }, { 31, 16 }, { 31, 17 }, { 31, 18 }, { 31, 19 }, { 31, 20 }, { 31, 21 }, { 31, 22 },
+    { 31, 23 }, { 31, 24 }, { 31, 25 }, { 31, 26 }, { 31, 27 }, { 31, 28 }, { 31, 29 }, { 31, 30 },
+    { 31, 31 }
+};
+
+const uint16_t BARRIER_NUM = 481;
+
+void build_complex_map()
 {
-    astar_set_barrier(0,0,1); astar_set_barrier(0,1,1); astar_set_barrier(0,2,1); astar_set_barrier(0,3,1); astar_set_barrier(0,4,1); astar_set_barrier(0,5,1); astar_set_barrier(0,6,1); astar_set_barrier(0,7,1);
-    astar_set_barrier(0,8,1); astar_set_barrier(0,9,1); astar_set_barrier(0,10,1); astar_set_barrier(0,11,1); astar_set_barrier(0,12,1); astar_set_barrier(0,13,1); astar_set_barrier(0,14,1); astar_set_barrier(0,15,1);
-    astar_set_barrier(0,16,1); astar_set_barrier(0,17,1); astar_set_barrier(0,18,1); astar_set_barrier(0,19,1); astar_set_barrier(0,20,1); astar_set_barrier(0,21,1); astar_set_barrier(0,22,1); astar_set_barrier(0,23,1);
-    astar_set_barrier(0,24,1); astar_set_barrier(0,25,1); astar_set_barrier(0,26,1); astar_set_barrier(0,27,1); astar_set_barrier(0,28,1); astar_set_barrier(0,29,1); astar_set_barrier(0,30,1); astar_set_barrier(0,31,1);
-    astar_set_barrier(1,0,1); astar_set_barrier(1,10,1); astar_set_barrier(1,15,1); astar_set_barrier(1,31,1); astar_set_barrier(2,0,1); astar_set_barrier(2,4,1); astar_set_barrier(2,6,1); astar_set_barrier(2,8,1);
-    astar_set_barrier(2,10,1); astar_set_barrier(2,12,1); astar_set_barrier(2,13,1); astar_set_barrier(2,15,1); astar_set_barrier(2,17,1); astar_set_barrier(2,18,1); astar_set_barrier(2,20,1); astar_set_barrier(2,21,1);
-    astar_set_barrier(2,23,1); astar_set_barrier(2,24,1); astar_set_barrier(2,25,1); astar_set_barrier(2,27,1); astar_set_barrier(2,29,1); astar_set_barrier(2,31,1); astar_set_barrier(3,0,1); astar_set_barrier(3,1,1);
-    astar_set_barrier(3,2,1); astar_set_barrier(3,4,1); astar_set_barrier(3,6,1); astar_set_barrier(3,8,1); astar_set_barrier(3,10,1); astar_set_barrier(3,12,1); astar_set_barrier(3,13,1); astar_set_barrier(3,15,1);
-    astar_set_barrier(3,17,1); astar_set_barrier(3,18,1); astar_set_barrier(3,21,1); astar_set_barrier(3,23,1); astar_set_barrier(3,25,1); astar_set_barrier(3,27,1); astar_set_barrier(3,29,1); astar_set_barrier(3,31,1);
-    astar_set_barrier(4,0,1); astar_set_barrier(4,4,1); astar_set_barrier(4,8,1); astar_set_barrier(4,12,1); astar_set_barrier(4,13,1); astar_set_barrier(4,15,1); astar_set_barrier(4,17,1); astar_set_barrier(4,18,1);
-    astar_set_barrier(4,21,1); astar_set_barrier(4,23,1); astar_set_barrier(4,25,1); astar_set_barrier(4,27,1); astar_set_barrier(4,29,1); astar_set_barrier(4,31,1); astar_set_barrier(5,0,1); astar_set_barrier(5,2,1);
-    astar_set_barrier(5,6,1); astar_set_barrier(5,8,1); astar_set_barrier(5,10,1); astar_set_barrier(5,11,1); astar_set_barrier(5,12,1); astar_set_barrier(5,13,1); astar_set_barrier(5,15,1); astar_set_barrier(5,17,1);
-    astar_set_barrier(5,18,1); astar_set_barrier(5,21,1); astar_set_barrier(5,23,1); astar_set_barrier(5,25,1); astar_set_barrier(5,27,1); astar_set_barrier(5,29,1); astar_set_barrier(5,31,1); astar_set_barrier(6,0,1);
-    astar_set_barrier(6,2,1); astar_set_barrier(6,4,1); astar_set_barrier(6,5,1); astar_set_barrier(6,6,1); astar_set_barrier(6,8,1); astar_set_barrier(6,10,1); astar_set_barrier(6,13,1); astar_set_barrier(6,15,1);
-    astar_set_barrier(6,17,1); astar_set_barrier(6,18,1); astar_set_barrier(6,21,1); astar_set_barrier(6,23,1); astar_set_barrier(6,25,1); astar_set_barrier(6,27,1); astar_set_barrier(6,29,1); astar_set_barrier(6,31,1);
-    astar_set_barrier(7,0,1); astar_set_barrier(7,2,1); astar_set_barrier(7,8,1); astar_set_barrier(7,10,1); astar_set_barrier(7,15,1); astar_set_barrier(7,17,1); astar_set_barrier(7,18,1); astar_set_barrier(7,21,1);
-    astar_set_barrier(7,23,1); astar_set_barrier(7,25,1); astar_set_barrier(7,27,1); astar_set_barrier(7,29,1); astar_set_barrier(7,31,1); astar_set_barrier(8,0,1); astar_set_barrier(8,4,1); astar_set_barrier(8,6,1);
-    astar_set_barrier(8,7,1); astar_set_barrier(8,8,1); astar_set_barrier(8,10,1); astar_set_barrier(8,12,1); astar_set_barrier(8,15,1); astar_set_barrier(8,17,1); astar_set_barrier(8,18,1); astar_set_barrier(8,21,1);
-    astar_set_barrier(8,23,1); astar_set_barrier(8,25,1); astar_set_barrier(8,27,1); astar_set_barrier(8,28,1); astar_set_barrier(8,29,1); astar_set_barrier(8,31,1); astar_set_barrier(9,0,1); astar_set_barrier(9,2,1);
-    astar_set_barrier(9,4,1); astar_set_barrier(9,10,1); astar_set_barrier(9,12,1); astar_set_barrier(9,14,1); astar_set_barrier(9,15,1); astar_set_barrier(9,17,1); astar_set_barrier(9,18,1); astar_set_barrier(9,21,1);
-    astar_set_barrier(9,23,1); astar_set_barrier(9,25,1); astar_set_barrier(9,31,1); astar_set_barrier(10,0,1); astar_set_barrier(10,2,1); astar_set_barrier(10,4,1); astar_set_barrier(10,5,1); astar_set_barrier(10,6,1);
-    astar_set_barrier(10,7,1); astar_set_barrier(10,8,1); astar_set_barrier(10,9,1); astar_set_barrier(10,10,1); astar_set_barrier(10,12,1); astar_set_barrier(10,14,1); astar_set_barrier(10,21,1); astar_set_barrier(10,23,1);
-    astar_set_barrier(10,25,1); astar_set_barrier(10,31,1); astar_set_barrier(11,0,1); astar_set_barrier(11,2,1); astar_set_barrier(11,12,1); astar_set_barrier(11,14,1); astar_set_barrier(11,18,1); astar_set_barrier(11,19,1);
-    astar_set_barrier(11,21,1); astar_set_barrier(11,23,1); astar_set_barrier(11,25,1); astar_set_barrier(11,27,1); astar_set_barrier(11,28,1); astar_set_barrier(11,29,1); astar_set_barrier(11,31,1); astar_set_barrier(12,0,1);
-    astar_set_barrier(12,2,1); astar_set_barrier(12,4,1); astar_set_barrier(12,6,1); astar_set_barrier(12,7,1); astar_set_barrier(12,8,1); astar_set_barrier(12,9,1); astar_set_barrier(12,10,1); astar_set_barrier(12,11,1);
-    astar_set_barrier(12,12,1); astar_set_barrier(12,14,1); astar_set_barrier(12,16,1); astar_set_barrier(12,18,1); astar_set_barrier(12,19,1); astar_set_barrier(12,21,1); astar_set_barrier(12,23,1); astar_set_barrier(12,25,1);
-    astar_set_barrier(12,27,1); astar_set_barrier(12,29,1); astar_set_barrier(12,31,1); astar_set_barrier(13,0,1); astar_set_barrier(13,4,1); astar_set_barrier(13,6,1); astar_set_barrier(13,14,1); astar_set_barrier(13,16,1);
-    astar_set_barrier(13,21,1); astar_set_barrier(13,23,1); astar_set_barrier(13,25,1); astar_set_barrier(13,27,1); astar_set_barrier(13,29,1); astar_set_barrier(13,31,1); astar_set_barrier(14,0,1); astar_set_barrier(14,2,1);
-    astar_set_barrier(14,3,1); astar_set_barrier(14,4,1); astar_set_barrier(14,6,1); astar_set_barrier(14,7,1); astar_set_barrier(14,8,1); astar_set_barrier(14,9,1); astar_set_barrier(14,10,1); astar_set_barrier(14,11,1);
-    astar_set_barrier(14,12,1); astar_set_barrier(14,16,1); astar_set_barrier(14,18,1); astar_set_barrier(14,20,1); astar_set_barrier(14,21,1); astar_set_barrier(14,23,1); astar_set_barrier(14,25,1); astar_set_barrier(14,27,1);
-    astar_set_barrier(14,31,1); astar_set_barrier(15,0,1); astar_set_barrier(15,8,1); astar_set_barrier(15,12,1); astar_set_barrier(15,15,1); astar_set_barrier(15,16,1); astar_set_barrier(15,18,1); astar_set_barrier(15,20,1);
-    astar_set_barrier(15,21,1); astar_set_barrier(15,23,1); astar_set_barrier(15,25,1); astar_set_barrier(15,27,1); astar_set_barrier(15,31,1); astar_set_barrier(16,0,1); astar_set_barrier(16,1,1); astar_set_barrier(16,2,1);
-    astar_set_barrier(16,3,1); astar_set_barrier(16,4,1); astar_set_barrier(16,5,1); astar_set_barrier(16,6,1); astar_set_barrier(16,8,1); astar_set_barrier(16,10,1); astar_set_barrier(16,12,1); astar_set_barrier(16,13,1);
-    astar_set_barrier(16,18,1); astar_set_barrier(16,20,1); astar_set_barrier(16,21,1); astar_set_barrier(16,23,1); astar_set_barrier(16,25,1); astar_set_barrier(16,27,1); astar_set_barrier(16,31,1); astar_set_barrier(17,0,1);
-    astar_set_barrier(17,6,1); astar_set_barrier(17,8,1); astar_set_barrier(17,10,1); astar_set_barrier(17,15,1); astar_set_barrier(17,17,1); astar_set_barrier(17,18,1); astar_set_barrier(17,20,1); astar_set_barrier(17,21,1);
-    astar_set_barrier(17,23,1); astar_set_barrier(17,25,1); astar_set_barrier(17,27,1); astar_set_barrier(17,31,1); astar_set_barrier(18,0,1); astar_set_barrier(18,2,1); astar_set_barrier(18,3,1); astar_set_barrier(18,4,1);
-    astar_set_barrier(18,6,1); astar_set_barrier(18,8,1); astar_set_barrier(18,10,1); astar_set_barrier(18,12,1); astar_set_barrier(18,13,1); astar_set_barrier(18,14,1); astar_set_barrier(18,15,1); astar_set_barrier(18,17,1);
-    astar_set_barrier(18,20,1); astar_set_barrier(18,21,1); astar_set_barrier(18,23,1); astar_set_barrier(18,25,1); astar_set_barrier(18,27,1); astar_set_barrier(18,29,1); astar_set_barrier(18,31,1); astar_set_barrier(19,0,1);
-    astar_set_barrier(19,2,1); astar_set_barrier(19,3,1); astar_set_barrier(19,4,1); astar_set_barrier(19,6,1); astar_set_barrier(19,8,1); astar_set_barrier(19,10,1); astar_set_barrier(19,17,1); astar_set_barrier(19,20,1);
-    astar_set_barrier(19,21,1); astar_set_barrier(19,23,1); astar_set_barrier(19,25,1); astar_set_barrier(19,27,1); astar_set_barrier(19,29,1); astar_set_barrier(19,31,1); astar_set_barrier(20,0,1); astar_set_barrier(20,2,1);
-    astar_set_barrier(20,3,1); astar_set_barrier(20,4,1); astar_set_barrier(20,6,1); astar_set_barrier(20,8,1); astar_set_barrier(20,10,1); astar_set_barrier(20,11,1); astar_set_barrier(20,12,1); astar_set_barrier(20,13,1);
-    astar_set_barrier(20,14,1); astar_set_barrier(20,15,1); astar_set_barrier(20,16,1); astar_set_barrier(20,17,1); astar_set_barrier(20,19,1); astar_set_barrier(20,20,1); astar_set_barrier(20,21,1); astar_set_barrier(20,23,1);
-    astar_set_barrier(20,25,1); astar_set_barrier(20,27,1); astar_set_barrier(20,28,1); astar_set_barrier(20,29,1); astar_set_barrier(20,31,1); astar_set_barrier(21,0,1); astar_set_barrier(21,4,1); astar_set_barrier(21,6,1);
-    astar_set_barrier(21,8,1); astar_set_barrier(21,19,1); astar_set_barrier(21,20,1); astar_set_barrier(21,21,1); astar_set_barrier(21,23,1); astar_set_barrier(21,25,1); astar_set_barrier(21,31,1); astar_set_barrier(22,0,1);
-    astar_set_barrier(22,1,1); astar_set_barrier(22,2,1); astar_set_barrier(22,4,1); astar_set_barrier(22,6,1); astar_set_barrier(22,8,1); astar_set_barrier(22,9,1); astar_set_barrier(22,10,1); astar_set_barrier(22,11,1);
-    astar_set_barrier(22,12,1); astar_set_barrier(22,13,1); astar_set_barrier(22,16,1); astar_set_barrier(22,19,1); astar_set_barrier(22,20,1); astar_set_barrier(22,21,1); astar_set_barrier(22,23,1); astar_set_barrier(22,25,1);
-    astar_set_barrier(22,27,1); astar_set_barrier(22,28,1); astar_set_barrier(22,29,1); astar_set_barrier(22,31,1); astar_set_barrier(23,0,1); astar_set_barrier(23,2,1); astar_set_barrier(23,4,1); astar_set_barrier(23,6,1);
-    astar_set_barrier(23,12,1); astar_set_barrier(23,16,1); astar_set_barrier(23,21,1); astar_set_barrier(23,23,1); astar_set_barrier(23,25,1); astar_set_barrier(23,27,1); astar_set_barrier(23,29,1); astar_set_barrier(23,31,1);
-    astar_set_barrier(24,0,1); astar_set_barrier(24,2,1); astar_set_barrier(24,4,1); astar_set_barrier(24,6,1); astar_set_barrier(24,7,1); astar_set_barrier(24,8,1); astar_set_barrier(24,9,1); astar_set_barrier(24,10,1);
-    astar_set_barrier(24,12,1); astar_set_barrier(24,14,1); astar_set_barrier(24,16,1); astar_set_barrier(24,19,1); astar_set_barrier(24,20,1); astar_set_barrier(24,21,1); astar_set_barrier(24,23,1); astar_set_barrier(24,25,1);
-    astar_set_barrier(24,27,1); astar_set_barrier(24,29,1); astar_set_barrier(24,31,1); astar_set_barrier(25,0,1); astar_set_barrier(25,2,1); astar_set_barrier(25,4,1); astar_set_barrier(25,12,1); astar_set_barrier(25,14,1);
-    astar_set_barrier(25,16,1); astar_set_barrier(25,19,1); astar_set_barrier(25,20,1); astar_set_barrier(25,21,1); astar_set_barrier(25,23,1); astar_set_barrier(25,25,1); astar_set_barrier(25,27,1); astar_set_barrier(25,29,1);
-    astar_set_barrier(25,31,1); astar_set_barrier(26,0,1); astar_set_barrier(26,2,1); astar_set_barrier(26,4,1); astar_set_barrier(26,5,1); astar_set_barrier(26,6,1); astar_set_barrier(26,7,1); astar_set_barrier(26,8,1);
-    astar_set_barrier(26,9,1); astar_set_barrier(26,10,1); astar_set_barrier(26,11,1); astar_set_barrier(26,12,1); astar_set_barrier(26,14,1); astar_set_barrier(26,16,1); astar_set_barrier(26,19,1); astar_set_barrier(26,20,1);
-    astar_set_barrier(26,21,1); astar_set_barrier(26,23,1); astar_set_barrier(26,25,1); astar_set_barrier(26,27,1); astar_set_barrier(26,29,1); astar_set_barrier(26,31,1); astar_set_barrier(27,0,1); astar_set_barrier(27,2,1);
-    astar_set_barrier(27,5,1); astar_set_barrier(27,9,1); astar_set_barrier(27,14,1); astar_set_barrier(27,21,1); astar_set_barrier(27,23,1); astar_set_barrier(27,25,1); astar_set_barrier(27,27,1); astar_set_barrier(27,29,1);
-    astar_set_barrier(27,31,1); astar_set_barrier(28,0,1); astar_set_barrier(28,5,1); astar_set_barrier(28,7,1); astar_set_barrier(28,9,1); astar_set_barrier(28,11,1); astar_set_barrier(28,14,1); astar_set_barrier(28,16,1);
-    astar_set_barrier(28,17,1); astar_set_barrier(28,18,1); astar_set_barrier(28,21,1); astar_set_barrier(28,23,1); astar_set_barrier(28,25,1); astar_set_barrier(28,27,1); astar_set_barrier(28,29,1); astar_set_barrier(28,31,1);
-    astar_set_barrier(29,0,1); astar_set_barrier(29,2,1); astar_set_barrier(29,3,1); astar_set_barrier(29,4,1); astar_set_barrier(29,5,1); astar_set_barrier(29,7,1); astar_set_barrier(29,9,1); astar_set_barrier(29,11,1);
-    astar_set_barrier(29,14,1); astar_set_barrier(29,16,1); astar_set_barrier(29,17,1); astar_set_barrier(29,18,1); astar_set_barrier(29,21,1); astar_set_barrier(29,22,1); astar_set_barrier(29,23,1); astar_set_barrier(29,25,1);
-    astar_set_barrier(29,26,1); astar_set_barrier(29,27,1); astar_set_barrier(29,29,1); astar_set_barrier(29,31,1); astar_set_barrier(30,0,1); astar_set_barrier(30,7,1); astar_set_barrier(30,11,1); astar_set_barrier(30,14,1);
-    astar_set_barrier(30,31,1); astar_set_barrier(31,0,1); astar_set_barrier(31,1,1); astar_set_barrier(31,2,1); astar_set_barrier(31,3,1); astar_set_barrier(31,4,1); astar_set_barrier(31,5,1); astar_set_barrier(31,6,1);
-    astar_set_barrier(31,7,1); astar_set_barrier(31,8,1); astar_set_barrier(31,9,1); astar_set_barrier(31,10,1); astar_set_barrier(31,11,1); astar_set_barrier(31,12,1); astar_set_barrier(31,13,1); astar_set_barrier(31,14,1);
-    astar_set_barrier(31,15,1); astar_set_barrier(31,16,1); astar_set_barrier(31,17,1); astar_set_barrier(31,18,1); astar_set_barrier(31,19,1); astar_set_barrier(31,20,1); astar_set_barrier(31,21,1); astar_set_barrier(31,22,1);
-    astar_set_barrier(31,23,1); astar_set_barrier(31,24,1); astar_set_barrier(31,25,1); astar_set_barrier(31,26,1); astar_set_barrier(31,27,1); astar_set_barrier(31,28,1); astar_set_barrier(31,29,1); astar_set_barrier(31,30,1);
-    astar_set_barrier(31,31,1);
+    for (uint16_t i = 0; i < BARRIER_NUM; ++i) 
+    {
+        astar_set_barrier(BARRIERS[i].x, BARRIERS[i].y, 1);
+    }
+        
 }

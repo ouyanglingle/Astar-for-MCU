@@ -1,8 +1,8 @@
 /**
  * @file astar.c
- * @brief 更适合单片机体质的C语言 A* 寻路实现，使用宽128高64的地图，避免浮点运算
+ * @brief 更适合单片机体质的C语言 A* 寻路实现，使用宽32高32的地图，避免浮点运算
  * @author AUST-WMZ
- * @version 1.0
+ * @version 1.1
  * @date 2025.10.06
  */
 
@@ -13,7 +13,7 @@
 // ------------------ 位带 -------------------
 
 // 把整个 128×64 的地图“压缩”成一个一维字节数组，每个 bit 代表一格是否可通行。
-static uint8_t map[MAP_W * MAP_H / 8];
+uint8_t map[MAP_W * MAP_H / 8];
 
 // 想象把地图每一行首尾接起来，变成一条8192个比特的长带子
 // 下面的map_idx就是坐标的序号
@@ -22,7 +22,7 @@ static uint8_t map[MAP_W * MAP_H / 8];
 /// @param x 格子的x
 /// @param y 格子的y
 /// @return 索引
-static inline uint16_t map_idx(uint16_t x, uint16_t y)
+uint16_t map_idx(uint16_t x, uint16_t y)
 {
     return y * MAP_W + x;
 }
@@ -30,7 +30,7 @@ static inline uint16_t map_idx(uint16_t x, uint16_t y)
 /// @brief 通过索引获取地图坐标
 /// @param idx 索引
 /// @return 坐标
-static inline Point map_to_point(uint16_t idx)
+Point map_to_point(uint16_t idx)
 {
     Point p;
     p.x = idx % MAP_W;
@@ -73,26 +73,26 @@ void astar_set_barrier(uint16_t x, uint16_t y, uint8_t on)
 // ------------------ 节点 -------------------
 typedef struct
 {
-    uint16_t x : 8, y : 8;    // 128=7bit 64=6bit
+    uint16_t x : 6, y : 6;    // 128=7bit 64=6bit
     uint16_t g : 12;          // g 最大 4095，单位“代价”
-    uint16_t parent_idx : 12; // 父节点索引，不使用 struct Node *parent了
+    uint16_t parent_idx : 11; // 父节点索引，不使用 struct Node *parent了
     uint16_t in_open : 1;     // 标记是否在开放列表
 } Node;                       // 你想爆栈么？
-static Node pool[MAX_OPEN];   // 静态节点内存池，用于存储所有开放列表中的节点
-static uint16_t pool_cnt;     // 节点内存池使用计数器，记录已分配的节点数量
+Node pool[MAX_OPEN];   // 静态节点内存池，用于存储所有开放列表中的节点
+uint16_t pool_cnt;     // 节点内存池使用计数器，记录已分配的节点数量
 
 // 从节点内存池中分配一个节点，返回分配的节点在内存池中的索引
-static inline uint16_t pool_alloc(void)
+uint16_t pool_alloc(void)
 {
     return pool_cnt++;
 }
 // 重置节点内存池计数器，相当于清空内存池
-static inline void pool_reset(void)
+void pool_reset(void)
 {
     pool_cnt = 0;
 }
 
-static Point target;
+Point target;
 /**
  * 计算节点的f_score值(f=g+h)，用于A*算法的路径评估
  * @param idx 节点在pool中的索引
@@ -102,7 +102,7 @@ static Point target;
  * h = 10 * (|x1-x2| + |y1-y2|)
  * f = g + h
  */
-static uint16_t f_score(uint16_t idx) /* f=g+h */
+uint16_t f_score(uint16_t idx) /* f=g+h */
 {
     Node *n = &pool[idx];
     uint16_t dx = n->x > target.x ? n->x - target.x : target.x - n->x;
@@ -113,15 +113,15 @@ static uint16_t f_score(uint16_t idx) /* f=g+h */
 
 // -------------- 小顶堆（优先队列） ---------------
 
-static uint16_t heap[MAX_OPEN];
-static uint16_t heap_cnt;
+uint16_t heap[MAX_OPEN];
+uint16_t heap_cnt;
 
 /**
  * 交换堆中两个元素的位置
  * @param i 第一个元素的索引
  * @param j 第二个元素的索引
  */
-static void heap_swap(uint16_t i, uint16_t j)
+void heap_swap(uint16_t i, uint16_t j)
 {
     uint16_t t = heap[i];
     heap[i] = heap[j];
@@ -132,7 +132,7 @@ static void heap_swap(uint16_t i, uint16_t j)
  * 将指定索引的元素向上调整以维护最小堆性质
  * @param idx 需要向上调整的元素索引
  */
-static void heap_up(uint16_t idx)
+void heap_up(uint16_t idx)
 {
     while (idx)
     {
@@ -147,7 +147,7 @@ static void heap_up(uint16_t idx)
 /**
  * 将堆顶元素向下调整以维护最小堆性质
  */
-static void heap_down(void)
+void heap_down(void)
 {
     uint16_t idx = 0;
     while (1)
@@ -168,7 +168,7 @@ static void heap_down(void)
  * 向堆中添加一个元素
  * @param idx 要添加的元素索引
  */
-static void heap_push(uint16_t idx)
+void heap_push(uint16_t idx)
 {
     heap[heap_cnt++] = idx;
     heap_up(heap_cnt - 1);
@@ -178,7 +178,7 @@ static void heap_push(uint16_t idx)
  * 从堆中弹出f_score最小的元素
  * @return f_score最小的元素索引
  */
-static uint16_t heap_pop(void)
+uint16_t heap_pop(void)
 {
     uint16_t ret = heap[0];
     heap[0] = heap[--heap_cnt];
@@ -187,9 +187,9 @@ static uint16_t heap_pop(void)
 }
 
 // -------------- 方向表 --------------
-static const int8_t dx8[8] = {1, 1, 0, -1, -1, -1, 0, 1};
-static const int8_t dy8[8] = {0, 1, 1, 1, 0, -1, -1, -1};
-static const uint8_t cost8[8] = {10, 14, 10, 14, 10, 14, 10, 14}; // 直线走代价：10/格，对角线走代价：14/格
+const int8_t dx8[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+const int8_t dy8[8] = {0, 1, 1, 1, 0, -1, -1, -1};
+const uint8_t cost8[8] = {10, 14, 10, 14, 10, 14, 10, 14}; // 直线走代价：10/格，对角线走代价：14/格
 
 // -------------- 搜索路径 --------------
 
@@ -214,7 +214,7 @@ int astar_search(Point from, Point to, Point *out_path)
     pool[start].x = from.x;
     pool[start].y = from.y;
     pool[start].g = 0;
-    pool[start].parent_idx = 0xFFF; // 无效值
+    pool[start].parent_idx = 0x7FF; // 无效值
     pool[start].in_open = 1;
     heap_push(start);
 
@@ -233,7 +233,7 @@ int astar_search(Point from, Point to, Point *out_path)
             int len = 0;
             uint16_t idx = cur;
             static Point rev[MAX_PATH];
-            while (idx != 0xFFF && len < MAX_PATH)
+            while (idx != 0x7FF && len < MAX_PATH)
             {
                 rev[len].x = pool[idx].x;
                 rev[len].y = pool[idx].y;
@@ -294,7 +294,7 @@ int astar_search(Point from, Point to, Point *out_path)
             }
         }
     }
-    printf("DEBUG: open list empty, total pool used %d\n", pool_cnt);
+
     return 0; // 无解
 }
 
@@ -302,4 +302,11 @@ int astar_search(Point from, Point to, Point *out_path)
 void astar_init(void)
 {
     memset(map, 0, sizeof(map));
+}
+
+void astar_reset()
+{
+    astar_init(); // 清障碍位图
+    pool_cnt = 0;
+    heap_cnt = 0; // 堆清空
 }

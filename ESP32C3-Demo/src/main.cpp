@@ -22,13 +22,14 @@ void setup()
 {
     tft.init();
     tft.fillScreen(TFT_BLACK);
-    tft.setRotation(2);
+    tft.setRotation(0);
     bf.createSprite(TFT_WIDTH, TFT_HEIGHT);
     bf.setTextColor(TFT_WHITE, TFT_BLACK);
     bf.setTextSize(1);
 
     astar_init();
     build_complex_map();
+    while (digitalRead(KEY3) != 0);
 }
 
 void loop()
@@ -71,12 +72,14 @@ void loop()
     {
         bf.setCursor(0, 210);
         bf.printf("Found Path, take %d steps", path_len);
+        bf.pushSprite(0, 0);
         for (int kk = 1; kk < path_len - 1; kk++)
         {
             bf.drawRect(RATIO * path[kk].x, RATIO * path[kk].y, RATIO, RATIO, TFT_WHITE);
-            bf.pushSprite(0, 0);
-            delay(1);
+            if (digitalRead(KEY3) == 0)
+                bf.pushSprite(0, 0);
         }
+        bf.pushSprite(0, 0);
     }
     else
     {
@@ -84,5 +87,5 @@ void loop()
         bf.printf("Not Found Path: %d,%d,%d", path_len, map_get(start.x, start.y), map_get(goal.x, goal.y));
         bf.pushSprite(0, 0);
     }
-    delay(300);
+    delay(10);
 }
